@@ -1,10 +1,10 @@
-
 package user_manager;
 import java.sql.* ;
 public class DB_Util {
     private static Connection conn ;
     public static Connection getConnection(){ 
         String dbUrl = "jdbc:mysql://localhost:3307/users_db";
+//        String dbUrl = "jdbc:mysql://localhost:3307/mydb";
         String userName = "root";
         String password = "";
         try{

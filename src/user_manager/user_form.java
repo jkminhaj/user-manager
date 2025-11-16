@@ -1,5 +1,6 @@
 package user_manager;
 import java.sql.* ;
+import javax.swing.JOptionPane;
 public class user_form extends javax.swing.JFrame {
     public String userName , email ;
     public int phone , userId;
@@ -169,7 +170,6 @@ public class user_form extends javax.swing.JFrame {
 
         try{
             Statement stmt = conn.createStatement();
-            //            int result = stmt.executeUpdate(query);
             ResultSet rs = stmt.executeQuery("select * from "+ tableName);
             while (rs.next()) {
                 int id = rs.getInt("userid");
@@ -180,55 +180,131 @@ public class user_form extends javax.swing.JFrame {
             }
             rs.close();
             stmt.close();
-        }catch(Exception err){
+        }catch(SQLException err){
             System.out.println("Error : "+ err);
+            showModal("error", "Something went wrong , please check the console");
         }
     }//GEN-LAST:event_viewBtnActionPerformed
 
+    public void showModal(String type , String mssg){
+        if("error".equals(type))JOptionPane.showMessageDialog(null, mssg,"Error",JOptionPane.ERROR_MESSAGE);
+        if("warning".equals(type))JOptionPane.showMessageDialog(null, mssg,"Warning",JOptionPane.WARNING_MESSAGE);
+        if("success".equals(type))JOptionPane.showMessageDialog(null, mssg,"Success",JOptionPane.INFORMATION_MESSAGE);
+    }
+    
     private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
+        // If input is empty
+        if(userIdField.getText().equals("")){
+            showModal("warning", "User Id can't be empty");
+            return ;
+        };
         userId = Integer.parseInt(userIdField.getText());
-        String query = "delete from userinfo where userid = ?";
         try{
-            PreparedStatement ps = conn.prepareStatement(query);
-            ps.setInt(1,userId);
-            ps.executeUpdate();
+            String query = "select * from userinfo where userid = '"+userId+"'";
+            PreparedStatement pst = conn.prepareStatement(query);
+            ResultSet rs = pst.executeQuery() ;
             
-            clearFields();
-            System.out.println("User Deleted Successfully");
-        }catch(Exception err){
-            System.out.println("Error : "+err);
+            if(rs.next()){
+                int result = JOptionPane.showConfirmDialog(null,
+                "Are you sure you want to delete this record?",
+                "Confirm Delete",
+                JOptionPane.YES_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+                query = "delete from userinfo where userid = ?";
+                
+                if(result == JOptionPane.YES_OPTION){
+                    try{
+                    PreparedStatement ps = conn.prepareStatement(query);
+                    ps.setInt(1,userId);
+                    ps.executeUpdate();
+
+                    clearFields();
+                    showModal("success", "User Deleted Successfully");
+                    }catch(Exception err){
+                        showModal("error", "Something went wrong please check the console!");
+                        System.out.println("Error : "+err);
+                    }
+                }else{
+
+                }
+            }else{
+                showModal("warning", "User id not found!");
+                return;
+            }
+            pst.close();
+            rs.close();
+        }catch(SQLException err){
+            System.out.println("Error: "+err);
+            showModal("error", "Something went wrong , please check the console");
         }
+      
     }//GEN-LAST:event_deleteBtnActionPerformed
 
     private void updateBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updateBtnActionPerformed
+        if(userIdField.getText().isEmpty() || phoneField.getText().isEmpty()){
+            showModal("warning", "Plase input user id and phone number");
+            return ;
+        }
         userId = Integer.parseInt(userIdField.getText());
         phone = Integer.parseInt(phoneField.getText());
-        String query = "update userinfo set phone = ? where userid = ?";
+        
+        String updatingQuery = "update userinfo set phone = ? where userid = ?";
+        String findingQuery = "select * from userinfo where userid = '"+userId+"'";
         try{
-            PreparedStatement ps = conn.prepareStatement(query);
+            PreparedStatement pst = conn.prepareStatement(findingQuery);
+            ResultSet rs = pst.executeQuery() ;
+            
+            if(!rs.next()){
+                showModal("warning", "User Id not found!");
+                return ;
+            }
+            pst.close();
+            rs.close();
+            PreparedStatement ps = conn.prepareStatement(updatingQuery);
             ps.setInt(1,phone);
             ps.setInt(2,userId);
             ps.executeUpdate();
+            ps.close();
             
+            showModal("success","User phone number updated");
             clearFields();
-            System.out.println("Updated Successfully");
-        }catch(Exception err){
+//            System.out.println("Updated Successfully");
+        }catch(SQLException err){
             System.out.println("Error : "+err);
+            showModal("error", "Something went wrong , please check the console");
         }
     }//GEN-LAST:event_updateBtnActionPerformed
 
     private void insertBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_insertBtnActionPerformed
+        if("".equals(userNameField.getText())||"".equals(emailField.getText())||"".equals(phoneField.getText())||"".equals(userIdField.getText())){
+           showModal("warning", "Please fill up all fields");
+           return ; 
+        }
+        
         loadFieldsToVariables();
         String query = "insert into "+ tableName +" values('"+userId+"','"+userName+"','"+email+"','"+phone+"')";
         try{
+            String findingQuery = "select * from userinfo where userid = '"+userId+"'";
+            PreparedStatement pst = conn.prepareStatement(findingQuery);
+            ResultSet rs = pst.executeQuery() ;
+            
+            if(rs.next()){
+                showModal("warning", "User ID already exits");
+                rs.close();
+                pst.close();
+                return ;
+            }
             Statement smt = conn.createStatement();
             int result = smt.executeUpdate(query);
             if(result>0){
-                System.out.println("Query executed successfully");
+//                System.out.println("Query executed successfully");
+                showModal("success", "New user added : "+userName);
+                smt.close();
                 clearFields();
             }else System.out.println("Something went wrong with query");
-        }catch(Exception e){
+        }catch(SQLException e){
             System.out.println("Error : "+ e);
+            showModal("error", "Something went wrong , please check the console");
         }
     }//GEN-LAST:event_insertBtnActionPerformed
 
