@@ -163,7 +163,14 @@ public class user_form extends javax.swing.JFrame {
 
     
     private void exitBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitBtnActionPerformed
-        // TODO add your handling code here:
+        int result = JOptionPane.showConfirmDialog(null,
+                "Are you sure you want to exit?",
+                "Confirm Exit",
+                JOptionPane.YES_OPTION,
+                JOptionPane.WARNING_MESSAGE);
+                if(result == JOptionPane.YES_OPTION){
+                    System.exit(0);
+                }else{}
     }//GEN-LAST:event_exitBtnActionPerformed
 
     private void viewBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_viewBtnActionPerformed
@@ -220,7 +227,7 @@ public class user_form extends javax.swing.JFrame {
 
                     clearFields();
                     showModal("success", "User Deleted Successfully");
-                    }catch(Exception err){
+                    }catch(SQLException err){
                         showModal("error", "Something went wrong please check the console!");
                         System.out.println("Error : "+err);
                     }
